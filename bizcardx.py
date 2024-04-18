@@ -10,7 +10,7 @@ import io
 import easyocr
 import re
 
-# create required tables in sql database if they don't exist
+# create required table in sql database if they don't exist
 def create_mysql_tables(cursor):
 
     cursor.execute("SHOW TABLES")
@@ -32,7 +32,8 @@ def create_mysql_tables(cursor):
                         "state VARCHAR(100),"
                         "pincode VARCHAR(100),"
                         "PRIMARY KEY (email_address) ) ")
-        
+
+ # clean the extracted data       
 def preprocess_extracted_data(data_string_list):
     
     data_extract = {}
@@ -158,25 +159,27 @@ if __name__ == "__main__":
         st.header(':green[_BizCardX: Extracting Business Card Data with OCR_] :books:')
         st.header("")
         col1, col2 = st.columns(2)
+        # image uploader
         image_upload = col1.file_uploader("Upload an image", type=['png', 'jpg', 'jpeg'], key="selected_file")
 
         if image_upload is not None:
             
             col1.image(image_upload)
-
-            # extract text data from image
+           
             file = image_upload.read()
             image_stream = io.BytesIO(file)
             img_bytes = image_stream.getvalue()
             reader = easyocr.Reader(["en"])
+             # extract data from image
             extracted_data = reader.readtext(img_bytes, paragraph=True, decoder="wordbeamsearch")
             data_string_list = []
             for data in extracted_data:
+                # appending the extracted text only
                 data_string_list.append(data[1])
 
             data_extracted = preprocess_extracted_data(data_string_list)
 
-            # encode the uploaded file to insert it to the sql database
+            # encode the uploaded image to insert it to the sql database
             file_encoded = base64.b64encode(file)
 
             channel_data_df = pd.DataFrame([data_extracted])
@@ -200,7 +203,7 @@ if __name__ == "__main__":
 
                 upload_data = col14.form_submit_button(label="Upload", help="Click to Upload Info!", type = "primary")
 
-            # add to database if not duplicate
+            # upload to database if not already exists
             if upload_data:
                 query = ("SELECT * FROM business_card_info WHERE email_address = %s")
                 val = email
@@ -218,17 +221,16 @@ if __name__ == "__main__":
                         connection.commit()
                         col2.success("Business Card Successfully Uploaded")
                 else:
-                    col2.warning("Business Card Already Uploaded")  
-                # time.sleep(1)
-                # st.rerun()          
+                    col2.warning("Business Card Already Uploaded")       
     
     if page == "View":
 
         sql = "SELECT * FROM business_card_info"
         cursor.execute(sql)
         connection.commit()
+        # fetch data from database
         result = cursor.fetchall()
-        
+        # decode a base64 encoded image and open it as an image
         def decode_image(image):
             binary_data = base64.b64decode(image)
             fin_image = Image.open(io.BytesIO(binary_data))
@@ -250,13 +252,14 @@ if __name__ == "__main__":
             email_address = row["Email Address"]
             business_cards.append(card_holder_name + " - " + email_address)
         col1, col2, col3 = st.columns(3)
-        # Dropdown displays all channels available in the MongoDB 
+        # Dropdown displays all business cards available in the database 
         option = col1.selectbox("Select Required Business Card Data To Modify/Delete", business_cards, index=None, placeholder="Select Business Card Data", key="selectbox")
 
         if option is not None:
             email_selected = option.split("-")[1].strip()
             result = result_df[result_df["Email Address"] == email_selected]
             col4, col5 = st.columns([4,2])
+            # form to update/delete business card data
             with col4.form(key = 'Business_Card_Info'):     
                 st.write('Business Card Information')
                 col7, col8 = st.columns(2)
