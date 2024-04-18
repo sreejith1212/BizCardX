@@ -149,14 +149,25 @@ if __name__ == "__main__":
                         )
    
     if page == "Home":
-
-        st.header(':green[BizCardX: Extracting Business Card Data with OCR] :scroll:')
+        
+        st.header(':green[BizCardX: Your tool for managing business card information efficiently] :scroll:')
         st.write("")
-        st.subheader(":orange[Application Properties :]")
+        col_home1, col_home2 = st.columns(2)
+        # col_home1.subheader(":orange[Application Properties :]")
+        for i in range(3):
+            col_home1.subheader("")
+        col_home1.subheader(":one: :grey[_Allows users to upload the business card image and extract its information._]")
+        for i in range(4):
+            col_home1.subheader("")
+        col_home1.subheader(":two: :grey[_Allows users to save the extracted information into a database along with the uploaded business card image._]")
+        for i in range(4):
+            col_home1.subheader("")
+        col_home1.subheader(":three: :grey[_Also, allows the users to read, update and delete the business card data from the database._]")
+        col_home2.image("business_cards.png")
 
     if page == "Upload":
 
-        st.header(':green[_BizCardX: Extracting Business Card Data with OCR_] :books:')
+        st.header(':green[_BizCardX: Your tool for managing business card information efficiently_] :books:')
         st.header("")
         col1, col2 = st.columns(2)
         # image uploader
@@ -303,7 +314,7 @@ if __name__ == "__main__":
             if st.session_state["delete_confirmation"]:    
                 modal = Modal(key="Key",title="Confirm To Delete")
                 with modal.container():
-                    col12, col13 = st.columns(2)
+                    col12, col13, col14 = st.columns(3)
                     if col12.button("Yes", type="primary"):
                         query = "DELETE FROM business_card_info WHERE email_address = %s"
                         val = (result.iloc[0]["Email Address"], )
